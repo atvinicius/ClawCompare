@@ -1,0 +1,11 @@
+# Cloned source repositories (large, can be re-cloned)
+/openclaw/
+/zeroclaw/
+/picoclaw/
+
+# OS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
