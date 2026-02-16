@@ -1,0 +1,8 @@
+{
+  "growth": {},
+  "compaction": {
+    "openclaw": {
+      "detected": false
+    }
+  }
+}

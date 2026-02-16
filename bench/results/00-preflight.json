@@ -1,0 +1,16 @@
+{
+  "tools": {
+    "bash": "GNU bash, version 3.2.57(1)-release (arm64-apple-darwin25)",
+    "jq": "jq-1.7.1-apple",
+    "bc": "bc available",
+    "curl": "curl 8.7.1 (x86_64-apple-darwin25.0) libcurl/8.7.1 (SecureTransport) LibreSSL/3.3.6 zlib/1.2.12 nghttp2/1.67.1",
+    "perl": "This is perl 5, version 34, subversion 1 (v5.34.1) built for darwin-thread-multi-2level",
+    "node": "v24.2.0",
+    "pnpm": "10.12.1"
+  },
+  "builds": {
+    "openclaw": "ok",
+    "zeroclaw": "skipped",
+    "picoclaw": "skipped"
+  }
+}

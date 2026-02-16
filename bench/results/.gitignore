@@ -1,5 +1,3 @@
-# Ignore generated benchmark results (machine-specific)
-*.json
-BENCHMARK-REPORT.md
-!.gitignore
-!.gitkeep
+# Keep results tracked as baseline snapshots
+!*.json
+!BENCHMARK-REPORT.md

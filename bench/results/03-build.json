@@ -1,0 +1,14 @@
+{
+  "clean_build": {
+    "openclaw": {
+      "ms": 6770.07,
+      "human": "6.77s"
+    }
+  },
+  "incremental_build": {
+    "openclaw": {
+      "ms": 6517.33,
+      "human": "6.51s"
+    }
+  }
+}
