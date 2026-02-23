@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 05-roundtrip-latency.sh — Message send → response latency via gateway HTTP
+# 05-roundtrip-latency.sh — Message send → response latency via agent CLI
 set -euo pipefail
 
 BENCH_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -17,56 +17,23 @@ fi
 
 echo '{}' > "$OUTPUT"
 
-header "Roundtrip Latency"
+header "Roundtrip Latency (agent CLI single-message mode)"
 
 latency_json="{}"
 
-# Helper: start gateway, send N messages, measure latency for each
-measure_gateway_latency() {
-    local name="$1"
-    local start_cmd="$2"
-    local port="$3"
-    local pid tmpdir
+BENCH_PROMPT="Reply with the number"
+BENCH_MODEL_ID="google/gemini-2.0-flash-001"
 
-    tmpdir="$(mktemp -d)"
+# Helper: measure latency for one project's agent CLI
+measure_agent_latency() {
+    local name="$1"
+    local agent_cmd="$2"
 
     info "Measuring $name roundtrip latency ($RUNS iterations)..."
 
-    # Start gateway in background
-    eval "$start_cmd" &>"$tmpdir/gateway.log" &
-    pid=$!
-
-    # Wait for gateway to be ready
-    local ready=false
-    for i in $(seq 1 30); do
-        if curl -sf "http://localhost:$port/" >/dev/null 2>&1 || \
-           curl -sf "http://localhost:$port/health" >/dev/null 2>&1 || \
-           curl -sf "http://localhost:$port/v1/chat/completions" -X OPTIONS >/dev/null 2>&1; then
-            ready=true
-            break
-        fi
-        sleep 0.5
-    done
-
-    if [[ "$ready" != "true" ]]; then
-        warn "$name gateway did not become ready"
-        kill "$pid" 2>/dev/null || true
-        rm -rf "$tmpdir"
-        return 1
-    fi
-
-    ok "$name gateway ready on port $port"
-
     # Warmup
     for ((i = 1; i <= WARMUP; i++)); do
-        curl -sf "http://localhost:$port/v1/chat/completions" \
-            -H "Content-Type: application/json" \
-            -H "Authorization: Bearer $OPENROUTER_API_KEY" \
-            -d "{
-                \"model\": \"$BENCH_MODEL\",
-                \"messages\": [{\"role\": \"user\", \"content\": \"Say hi.\"}],
-                \"max_tokens\": 5
-            }" >/dev/null 2>&1 || true
+        eval "$agent_cmd $i" >/dev/null 2>&1 || true
     done
 
     # Measure latency for each iteration
@@ -75,14 +42,7 @@ measure_gateway_latency() {
         local start end elapsed_ms
         start="$(perl -MTime::HiRes=time -e 'printf "%.6f", time')"
 
-        curl -sf "http://localhost:$port/v1/chat/completions" \
-            -H "Content-Type: application/json" \
-            -H "Authorization: Bearer $OPENROUTER_API_KEY" \
-            -d "{
-                \"model\": \"$BENCH_MODEL\",
-                \"messages\": [{\"role\": \"user\", \"content\": \"Reply with the number $i only.\"}],
-                \"max_tokens\": 10
-            }" > "$tmpdir/response_$i.json" 2>/dev/null || true
+        eval "$agent_cmd $i" >/dev/null 2>&1 || true
 
         end="$(perl -MTime::HiRes=time -e 'printf "%.6f", time')"
         elapsed_ms="$(echo "($end - $start) * 1000" | bc)"
@@ -101,19 +61,13 @@ measure_gateway_latency() {
     local stats
     stats="$(compute_stats "$times_json")"
 
-    # Cleanup
-    kill "$pid" 2>/dev/null || true
-    wait "$pid" 2>/dev/null || true
-    rm -rf "$tmpdir"
-
     echo "{\"raw\": $times_json, \"stats\": $stats}"
 }
 
 # ─── OpenClaw ────────────────────────────────────────────────────────────────
 if [[ -f "$OPENCLAW_BIN" && -d "$OPENCLAW_DIR/dist" ]] && command -v node >/dev/null 2>&1; then
-    res="$(measure_gateway_latency "OpenClaw" \
-        "OPENROUTER_API_KEY=$OPENROUTER_API_KEY node $OPENCLAW_BIN gateway" \
-        "$OPENCLAW_PORT")" || true
+    res="$(measure_agent_latency "OpenClaw" \
+        "OPENROUTER_API_KEY=$OPENROUTER_API_KEY node '$OPENCLAW_BIN' agent --local --message '$BENCH_PROMPT' --session-id bench-lat --json")" || true
     if [[ -n "$res" ]]; then
         latency_json="$(echo "$latency_json" | jq --argjson v "$res" '. + {"openclaw": $v}')"
     fi
@@ -121,21 +75,8 @@ fi
 
 # ─── ZeroClaw ────────────────────────────────────────────────────────────────
 if [[ -f "$ZEROCLAW_BIN" ]]; then
-    tmpconf="$(mktemp)"
-    cat > "$tmpconf" <<TOML
-api_key = "$OPENROUTER_API_KEY"
-default_provider = "openrouter"
-default_model = "$BENCH_MODEL"
-
-[gateway]
-port = $ZEROCLAW_PORT
-host = "127.0.0.1"
-TOML
-
-    res="$(measure_gateway_latency "ZeroClaw" \
-        "$ZEROCLAW_BIN gateway --config $tmpconf" \
-        "$ZEROCLAW_PORT")" || true
-    rm -f "$tmpconf"
+    res="$(measure_agent_latency "ZeroClaw" \
+        "OPENROUTER_API_KEY=$OPENROUTER_API_KEY '$ZEROCLAW_BIN' agent -m '$BENCH_PROMPT' -p openrouter --model '$BENCH_MODEL_ID'")" || true
     if [[ -n "$res" ]]; then
         latency_json="$(echo "$latency_json" | jq --argjson v "$res" '. + {"zeroclaw": $v}')"
     fi
@@ -150,29 +91,43 @@ else
 fi
 
 if [[ -n "$picoclaw_actual" && -f "$picoclaw_actual" ]]; then
-    tmpconf="$(mktemp)"
-    cat > "$tmpconf" <<JSON
+    # Set up PicoClaw config
+    picoclaw_conf_dir="$HOME/.picoclaw"
+    picoclaw_conf="$picoclaw_conf_dir/config.json"
+    picoclaw_conf_backup=""
+
+    if [[ -f "$picoclaw_conf" ]]; then
+        picoclaw_conf_backup="$(mktemp)"
+        cp "$picoclaw_conf" "$picoclaw_conf_backup"
+    fi
+
+    mkdir -p "$picoclaw_conf_dir"
+    cat > "$picoclaw_conf" <<PCJSON
 {
-    "agent": {
-        "default_model": "$BENCH_MODEL"
+    "agents": {
+        "defaults": {
+            "model": "$BENCH_MODEL_ID"
+        }
     },
     "providers": {
         "openrouter": {
             "api_key": "$OPENROUTER_API_KEY"
         }
-    },
-    "gateway": {
-        "port": $PICOCLAW_PORT
     }
 }
-JSON
+PCJSON
 
-    res="$(measure_gateway_latency "PicoClaw" \
-        "$picoclaw_actual gateway --config $tmpconf" \
-        "$PICOCLAW_PORT")" || true
-    rm -f "$tmpconf"
+    res="$(measure_agent_latency "PicoClaw" \
+        "'$picoclaw_actual' agent -m '$BENCH_PROMPT'")" || true
     if [[ -n "$res" ]]; then
         latency_json="$(echo "$latency_json" | jq --argjson v "$res" '. + {"picoclaw": $v}')"
+    fi
+
+    # Restore original config
+    if [[ -n "$picoclaw_conf_backup" ]]; then
+        mv "$picoclaw_conf_backup" "$picoclaw_conf"
+    else
+        rm -f "$picoclaw_conf"
     fi
 fi
 

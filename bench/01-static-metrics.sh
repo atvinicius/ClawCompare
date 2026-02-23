@@ -93,22 +93,22 @@ if command -v tokei >/dev/null 2>&1; then
     info "Using tokei for SLOC counting"
 
     if [[ -d "$OPENCLAW_DIR/src" ]]; then
-        count="$(tokei "$OPENCLAW_DIR/src" -t TypeScript 2>/dev/null | grep 'TypeScript' | awk '{print $NF}' || echo 0)"
-        [[ "$count" == "0" || -z "$count" ]] && count="$(tokei "$OPENCLAW_DIR/src" 2>/dev/null | grep 'Total' | awk '{print $NF}' || echo 0)"
+        count="$(tokei "$OPENCLAW_DIR/src" -t TypeScript 2>/dev/null | grep 'TypeScript' | awk '{print $4}' || echo 0)"
+        [[ "$count" == "0" || -z "$count" ]] && count="$(tokei "$OPENCLAW_DIR/src" 2>/dev/null | grep 'Total' | awk '{print $4}' || echo 0)"
         info "OpenClaw: $count SLOC"
         sloc_json="$(echo "$sloc_json" | jq --argjson c "${count:-0}" '. + {"openclaw": $c}')"
     fi
 
     if [[ -d "$ZEROCLAW_DIR/src" ]]; then
-        count="$(tokei "$ZEROCLAW_DIR/src" -t Rust 2>/dev/null | grep 'Rust' | awk '{print $NF}' || echo 0)"
-        [[ "$count" == "0" || -z "$count" ]] && count="$(tokei "$ZEROCLAW_DIR/src" 2>/dev/null | grep 'Total' | awk '{print $NF}' || echo 0)"
+        count="$(tokei "$ZEROCLAW_DIR/src" -t Rust 2>/dev/null | grep 'Rust' | awk '{print $4}' || echo 0)"
+        [[ "$count" == "0" || -z "$count" ]] && count="$(tokei "$ZEROCLAW_DIR/src" 2>/dev/null | grep 'Total' | awk '{print $4}' || echo 0)"
         info "ZeroClaw: $count SLOC"
         sloc_json="$(echo "$sloc_json" | jq --argjson c "${count:-0}" '. + {"zeroclaw": $c}')"
     fi
 
     if [[ -d "$PICOCLAW_DIR" ]]; then
-        count="$(tokei "$PICOCLAW_DIR" -t Go 2>/dev/null | grep 'Go' | awk '{print $NF}' || echo 0)"
-        [[ "$count" == "0" || -z "$count" ]] && count="$(tokei "$PICOCLAW_DIR/cmd" "$PICOCLAW_DIR/pkg" 2>/dev/null | grep 'Total' | awk '{print $NF}' || echo 0)"
+        count="$(tokei "$PICOCLAW_DIR" -t Go 2>/dev/null | grep 'Go' | awk '{print $4}' || echo 0)"
+        [[ "$count" == "0" || -z "$count" ]] && count="$(tokei "$PICOCLAW_DIR/cmd" "$PICOCLAW_DIR/pkg" 2>/dev/null | grep 'Total' | awk '{print $4}' || echo 0)"
         info "PicoClaw: $count SLOC"
         sloc_json="$(echo "$sloc_json" | jq --argjson c "${count:-0}" '. + {"picoclaw": $c}')"
     fi

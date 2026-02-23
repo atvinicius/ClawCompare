@@ -7,11 +7,11 @@
 | Property | Value |
 |----------|-------|
 | Platform | macOS arm64 |
-| OS | 26.2 |
+| OS | 26.3 |
 | CPU | Apple M4 |
 | Cores | 10 |
 | RAM | 16.0 GB |
-| Date | 2026-02-16 17:36 UTC |
+| Date | 2026-02-23 14:47 UTC |
 
 ### Toolchain Versions
 
@@ -20,18 +20,22 @@
 | bash | GNU bash, version 3.2.57(1)-release (arm64-apple-darwin25) |
 | jq | jq-1.7.1-apple |
 | bc | bc available |
-| curl | curl 8.7.1 (x86_64-apple-darwin25.0) libcurl/8.7.1 (SecureTransport) LibreSSL/3.3.6 zlib/1.2.12 nghttp2/1.67.1 |
+| curl | curl 8.7.1 (x86_64-apple-darwin25.0) libcurl/8.7.1 (SecureTransport) LibreSSL/3.3.6 zlib/1.2.12 nghttp2/1.68.0 |
 | perl | This is perl 5, version 34, subversion 1 (v5.34.1) built for darwin-thread-multi-2level |
+| hyperfine | hyperfine 1.20.0 |
+| tokei | tokei 14.0.0 compiled with serialization support: json, cbor, yaml |
 | node | v24.2.0 |
 | pnpm | 10.12.1 |
+| cargo | cargo 1.93.1 (Homebrew) |
+| go | go version go1.26.0 darwin/arm64 |
 
 ### Build Status
 
 | Project | Status |
 |---------|--------|
 | openclaw | ✅ ok |
-| zeroclaw | ⏭️ skipped |
-| picoclaw | ⏭️ skipped |
+| zeroclaw | ✅ ok |
+| picoclaw | ✅ ok |
 
 ## Static Metrics
 
@@ -40,24 +44,24 @@
 | Project | Size | Human |
 |---------|-----:|-------|
 | openclaw | 35274752 | 33.6 MB |
-| zeroclaw | - | - |
-| picoclaw | - | - |
+| zeroclaw | 4747744 | 4.5 MB |
+| picoclaw | 25825410 | 24.6 MB |
 
 ### Dependency Count
 
 | Project | Dependencies |
 |---------|-------------:|
 | openclaw | 75 |
-| zeroclaw | - |
-| picoclaw | - |
+| zeroclaw | 44 |
+| picoclaw | 121 |
 
 ### Source Lines of Code
 
 | Project | SLOC |
 |---------|-----:|
-| openclaw | 530597 |
-| zeroclaw | 49003 |
-| picoclaw | 25091 |
+| openclaw | 473412 |
+| zeroclaw | 40814 |
+| picoclaw | 20226 |
 
 ## Startup Timing
 
@@ -65,11 +69,15 @@
 
 | Project | Min | Median | Mean | P95 | Max |
 |---------|----:|-------:|-----:|----:|----:|
-| openclaw | 592.43 | 600.57 | 600.58 | 605.88 | 613.84 |
+| openclaw | 605.28398000 | 615.2737925000 | 615.8813468000001000 | 633.1291050000001000 | 633.1291050000001000 |
+| zeroclaw | 2.5850299000 | 3.3785919000 | 3.233167000 | 3.4998629000 | 3.4998629000 |
+| picoclaw | 4.2665043199999995000 | 4.375775320000001000 | 4.43045452000 | 4.77112932000 | 4.77112932000 |
 
 #### Relative Startup Time
 
-- **openclaw**: ██████████ 600.57ms (1.0x)
+- **openclaw**: █████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████ 615.2737925000ms (182.1x)
+- **zeroclaw**: ██████████ 3.3785919000ms (1.0x)
+- **picoclaw**: ████████████ 4.375775320000001000ms (1.2x)
 
 ## Build Times
 
@@ -77,51 +85,51 @@
 
 | Project | Time | Human |
 |---------|-----:|-------|
-| openclaw | 6770.07 | 6.77s |
-| zeroclaw | - | - |
-| picoclaw | - | - |
+| openclaw | 6991.17 | 6.99s |
+| zeroclaw | 69267.39 | 69.26s |
+| picoclaw | 2427.00 | 2.42s |
 
 ### Incremental Build (ms)
 
 | Project | Time | Human |
 |---------|-----:|-------|
-| openclaw | 6517.33 | 6.51s |
-| zeroclaw | - | - |
-| picoclaw | - | - |
+| openclaw | 7493.11 | 7.49s |
+| zeroclaw | 45274.21 | 45.27s |
+| picoclaw | 2466.36 | 2.46s |
 
 ## Runtime Memory (Peak RSS)
 
 | Project | RSS (KB) | RSS (MB) |
 |---------|--------:|--------:|
-| openclaw | - | - |
-| zeroclaw | - | - |
-| picoclaw | - | - |
+| openclaw | 1140288 | 1113.5 |
+| zeroclaw | 11872 | 11.5 |
+| picoclaw | 25184 | 24.5 |
 
 ## Roundtrip Latency (ms)
 
 | Project | Min | Median | Mean | P95 | Max |
 |---------|----:|-------:|-----:|----:|----:|
+| openclaw | 694.938000 | 708.06 | 717.93 | 735.358000 | 756.488000 |
+| zeroclaw | 8.123000 | 8.58 | 8.67 | 8.783000 | 10.029000 |
+| picoclaw | 767.746000 | 1952.45 | 1962.32 | 3082.267000 | 3436.515000 |
 
 ## Memory Under Load (Stress Test)
 
-### RSS Growth by Message Count (KB)
+### Peak RSS by Message Count (KB)
 
-| Project | 5 msgs | 10 msgs | 20 msgs | 50 msgs |
-|---------|-------:|--------:|--------:|--------:|
-| openclaw | - | - | - | - |
-| zeroclaw | - | - | - | - |
-| picoclaw | - | - | - | - |
-
-### Compaction Events
-
-- **openclaw**: No compaction detected
+| Project | 1 msg | 5 msgs | 10 msgs |
+|---------|------:|-------:|--------:|
+| openclaw | 405152 | 412128 | 410592 |
+| zeroclaw | 7824 | 7792 | 7808 |
+| picoclaw | 25232 | 28144 | 29824 |
 
 ## Key Findings
 
-- **Fastest startup**: openclaw at 600.57ms median
-- **Smallest artifact**: openclaw at 33.6 MB
-- **Fewest dependencies**: openclaw with 75 direct dependencies
+- **Fastest startup**: zeroclaw at 3.3785919000ms median
+- **Smallest artifact**: zeroclaw at 4.5 MB
+- **Lowest memory**: zeroclaw at 11.5 MB peak RSS
+- **Fewest dependencies**: zeroclaw with 44 direct dependencies
 
 ---
 
-*Generated on 2026-02-16 17:36:18 UTC by `bench/run-all.sh`*
+*Generated on 2026-02-23 14:47:10 UTC by `bench/run-all.sh`*

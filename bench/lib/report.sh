@@ -241,40 +241,17 @@ EOF
         cat >> "$report_file" <<'EOF'
 ## Memory Under Load (Stress Test)
 
-### RSS Growth by Message Count (KB)
+### Peak RSS by Message Count (KB)
 
-| Project | 5 msgs | 10 msgs | 20 msgs | 50 msgs |
-|---------|-------:|--------:|--------:|--------:|
+| Project | 1 msg | 5 msgs | 10 msgs |
+|---------|------:|-------:|--------:|
 EOF
         for proj in openclaw zeroclaw picoclaw; do
-            local r5 r10 r20 r50
+            local r1 r5 r10
+            r1="$(echo "$stress" | jq -r ".growth.${proj}[\"1\"] // \"-\"")"
             r5="$(echo "$stress" | jq -r ".growth.${proj}[\"5\"] // \"-\"")"
             r10="$(echo "$stress" | jq -r ".growth.${proj}[\"10\"] // \"-\"")"
-            r20="$(echo "$stress" | jq -r ".growth.${proj}[\"20\"] // \"-\"")"
-            r50="$(echo "$stress" | jq -r ".growth.${proj}[\"50\"] // \"-\"")"
-            echo "| $proj | $r5 | $r10 | $r20 | $r50 |" >> "$report_file"
-        done
-
-        cat >> "$report_file" <<'EOF'
-
-### Compaction Events
-
-EOF
-        for proj in openclaw zeroclaw picoclaw; do
-            local compaction
-            compaction="$(echo "$stress" | jq -r ".compaction.${proj} // {}")"
-            if [[ "$compaction" != "{}" && "$compaction" != "null" ]]; then
-                local detected at_msg before after
-                detected="$(echo "$compaction" | jq -r '.detected // false')"
-                if [[ "$detected" == "true" ]]; then
-                    at_msg="$(echo "$compaction" | jq -r '.at_message // "?"')"
-                    before="$(echo "$compaction" | jq -r '.rss_before_kb // "?"')"
-                    after="$(echo "$compaction" | jq -r '.rss_after_kb // "?"')"
-                    echo "- **$proj**: Compaction detected at message $at_msg (RSS: ${before} KB → ${after} KB)" >> "$report_file"
-                else
-                    echo "- **$proj**: No compaction detected" >> "$report_file"
-                fi
-            fi
+            echo "| $proj | $r1 | $r5 | $r10 |" >> "$report_file"
         done
         echo "" >> "$report_file"
     fi

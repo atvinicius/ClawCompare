@@ -3,14 +3,24 @@
     "openclaw": {
       "bytes": 35274752,
       "human": "33.6 MB"
+    },
+    "zeroclaw": {
+      "bytes": 4747744,
+      "human": "4.5 MB"
+    },
+    "picoclaw": {
+      "bytes": 25825410,
+      "human": "24.6 MB"
     }
   },
   "dependencies": {
-    "openclaw": 75
+    "openclaw": 75,
+    "zeroclaw": 44,
+    "picoclaw": 121
   },
   "sloc": {
-    "openclaw": 530597,
-    "zeroclaw": 49003,
-    "picoclaw": 25091
+    "openclaw": 473412,
+    "zeroclaw": 40814,
+    "picoclaw": 20226
   }
 }

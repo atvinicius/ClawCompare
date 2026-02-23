@@ -1,14 +1,30 @@
 {
   "clean_build": {
     "openclaw": {
-      "ms": 6770.07,
-      "human": "6.77s"
+      "ms": 6991.17,
+      "human": "6.99s"
+    },
+    "zeroclaw": {
+      "ms": 69267.39,
+      "human": "69.26s"
+    },
+    "picoclaw": {
+      "ms": 2427.00,
+      "human": "2.42s"
     }
   },
   "incremental_build": {
     "openclaw": {
-      "ms": 6517.33,
-      "human": "6.51s"
+      "ms": 7493.11,
+      "human": "7.49s"
+    },
+    "zeroclaw": {
+      "ms": 45274.21,
+      "human": "45.27s"
+    },
+    "picoclaw": {
+      "ms": 2466.36,
+      "human": "2.46s"
     }
   }
 }
