@@ -1,0 +1,136 @@
+name: Benchmark Suite
+
+on:
+  push:
+    branches: [main]
+    paths: ['bench/**']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      full_suite:
+        description: 'Run API-dependent benchmarks (04-06)'
+        type: boolean
+        default: false
+
+env:
+  WARMUP: 2
+  RUNS: 5
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout ClawCompare
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq bc
+          # Install hyperfine
+          wget -q https://github.com/sharkdp/hyperfine/releases/download/v1.18.0/hyperfine_1.18.0_amd64.deb
+          sudo dpkg -i hyperfine_1.18.0_amd64.deb
+          # Install tokei
+          cargo install tokei --locked
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install pnpm
+        run: corepack enable && corepack prepare pnpm@latest --activate
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Cache Rust target
+        uses: actions/cache@v4
+        with:
+          path: zeroclaw/target
+          key: ${{ runner.os }}-rust-${{ hashFiles('zeroclaw/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-rust-
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('picoclaw/go.sum') }}
+          restore-keys: ${{ runner.os }}-go-
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/pnpm/store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('openclaw/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-
+
+      - name: Clone upstream projects
+        run: |
+          git clone --depth 1 https://github.com/nicepkg/openclaw.git openclaw
+          git clone --depth 1 https://github.com/zeroclaw-labs/zeroclaw.git zeroclaw
+          git clone --depth 1 https://github.com/pico-claw/picoclaw.git picoclaw
+
+      - name: 'Benchmark: 00-preflight'
+        run: bash bench/00-preflight.sh
+
+      - name: 'Benchmark: 01-static-metrics'
+        run: bash bench/01-static-metrics.sh
+
+      - name: 'Benchmark: 02-startup-timing'
+        run: bash bench/02-startup-timing.sh
+
+      - name: 'Benchmark: 03-build-metrics'
+        run: bash bench/03-build-metrics.sh
+
+      - name: 'Benchmark: 04-runtime-memory'
+        if: >-
+          (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+          && (secrets.OPENROUTER_API_KEY != '' || inputs.full_suite)
+        run: bash bench/04-runtime-memory.sh || true
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+
+      - name: 'Benchmark: 05-roundtrip-latency'
+        if: >-
+          (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+          && (secrets.OPENROUTER_API_KEY != '' || inputs.full_suite)
+        run: bash bench/05-roundtrip-latency.sh || true
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+
+      - name: 'Benchmark: 06-stress-compaction'
+        if: >-
+          (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+          && (secrets.OPENROUTER_API_KEY != '' || inputs.full_suite)
+        run: bash bench/06-stress-compaction.sh || true
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+
+      - name: Generate report
+        run: |
+          source bench/config.sh
+          source bench/lib/platform.sh
+          source bench/lib/measure.sh
+          source bench/lib/report.sh
+          get_system_info > bench/results/system-info.json
+          generate_report bench/results
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: bench/results/
+          retention-days: 90
+
+      - name: Post report as PR comment
+        if: github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          path: bench/results/BENCHMARK-REPORT.md
